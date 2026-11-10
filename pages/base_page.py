@@ -1,6 +1,7 @@
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import (
+    NoSuchElementException,
     StaleElementReferenceException,
     TimeoutException,
 )
@@ -10,8 +11,17 @@ class BasePage:
     
     def __init__(self, driver):
         self.driver = driver
-        # Explicit wait default 10 detik
-        self.wait = WebDriverWait(self.driver, 10)
+        # Explicit wait default 10 detik.
+        # StaleElementReferenceException diabaikan agar WebDriverWait mencari
+        # ulang elemen ketika DOM berubah (mis. re-render React).
+        self.wait = WebDriverWait(
+            self.driver,
+            10,
+            ignored_exceptions=(
+                NoSuchElementException,
+                StaleElementReferenceException,
+            ),
+        )
 
     def find_element(self, locator):
         """Mencari elemen tunggal dengan explicit wait visibility."""
@@ -21,10 +31,16 @@ class BasePage:
             raise TimeoutException(f"Elemen dengan lokator {locator} tidak ditemukan dalam waktu tunggu.")
 
     def click(self, locator):
-        """Menunggu elemen dapat diklik lalu melakukan aksi klik."""
+        """Menunggu elemen dapat diklik lalu melakukan aksi klik.
+
+        Jika elemen menjadi stale di antara proses pencarian dan klik,
+        elemen akan dicari ulang dari awal.
+        """
         for attempt in range(3):
-            element = self.wait.until(EC.element_to_be_clickable(locator))
             try:
+                element = self.wait.until(
+                    EC.element_to_be_clickable(locator)
+                )
                 element.click()
                 return
             except StaleElementReferenceException:

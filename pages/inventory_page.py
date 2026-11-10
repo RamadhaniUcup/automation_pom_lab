@@ -27,6 +27,11 @@ class InventoryPage(BasePage):
         "add-to-cart-sauce-labs-backpack"
     )
 
+    REMOVE_BACKPACK_BUTTON = (
+        By.ID,
+        "remove-sauce-labs-backpack"
+    )
+
     CART_BADGE = (
         By.CSS_SELECTOR,
         ".shopping_cart_badge"
@@ -64,14 +69,30 @@ class InventoryPage(BasePage):
         return len(products)
 
     def add_backpack_to_cart(self):
+        """Menambahkan Backpack lalu memverifikasi hasilnya di DOM.
+
+        Setelah klik berhasil, tombol Add to cart diganti menjadi Remove.
+        Kondisi itulah yang ditunggu (bukan sekadar badge), kemudian badge
+        dipastikan tampil dan berisi angka 1.
+        """
         for attempt in range(3):
             self.click(self.ADD_BACKPACK_BUTTON)
+
             try:
                 WebDriverWait(self.driver, 3).until(
-                    EC.visibility_of_element_located(self.CART_BADGE)
+                    EC.visibility_of_element_located(
+                        self.REMOVE_BACKPACK_BUTTON
+                    )
+                )
+                self.wait.until(
+                    EC.text_to_be_present_in_element(self.CART_BADGE, "1")
                 )
                 return
             except TimeoutException:
+                # Jika tombol Add to cart sudah tidak ada, klik sudah
+                # diproses tetapi state tidak sesuai; jangan klik ulang.
+                if not self.driver.find_elements(*self.ADD_BACKPACK_BUTTON):
+                    raise
                 if attempt == 2:
                     raise
 

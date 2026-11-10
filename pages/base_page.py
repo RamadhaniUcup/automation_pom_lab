@@ -1,6 +1,9 @@
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import (
+    StaleElementReferenceException,
+    TimeoutException,
+)
 
 class BasePage:
     """Kelas dasar yang diwarisi oleh seluruh halaman Page Object."""
@@ -19,8 +22,14 @@ class BasePage:
 
     def click(self, locator):
         """Menunggu elemen dapat diklik lalu melakukan aksi klik."""
-        element = self.wait.until(EC.element_to_be_clickable(locator))
-        element.click()
+        for attempt in range(3):
+            element = self.wait.until(EC.element_to_be_clickable(locator))
+            try:
+                element.click()
+                return
+            except StaleElementReferenceException:
+                if attempt == 2:
+                    raise
 
     def type_text(self, locator, text):
         """Mengisi teks ke input field setelah membersihkan teks sebelumnya."""

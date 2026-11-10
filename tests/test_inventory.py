@@ -12,8 +12,26 @@ class TestInventory:
 
         return InventoryPage(driver)
 
+    def test_inventory_page_displayed(self, driver):
+        """TC-INV-01: Memastikan halaman Inventory berhasil ditampilkan."""
+
+        inventory_page = self.login_to_inventory(driver)
+
+        assert inventory_page.is_page_displayed() is True, (
+            "Halaman Inventory tidak tampil setelah login."
+        )
+
+    def test_inventory_product_count(self, driver):
+        """TC-INV-02: Memastikan seluruh produk berhasil dihitung."""
+
+        inventory_page = self.login_to_inventory(driver)
+
+        assert inventory_page.get_product_count() == 6, (
+            "Jumlah produk pada halaman Inventory tidak sesuai."
+        )
+
     def test_add_to_cart_flow(self, driver):
-        """TC-INV-01: Memastikan Backpack berhasil ditambahkan ke keranjang."""
+        """TC-INV-03: Memastikan Backpack berhasil ditambahkan ke keranjang."""
 
         inventory_page = self.login_to_inventory(driver)
 
@@ -28,7 +46,7 @@ class TestInventory:
         )
 
     def test_logout_flow(self, driver):
-        """TC-INV-02: Memastikan pengguna berhasil logout."""
+        """TC-INV-04: Memastikan pengguna berhasil logout."""
 
         login_page = LoginPage(driver)
         login_page.open()
